@@ -1,0 +1,80 @@
+services:
+  webserver:
+    container_name: "$DOCKER_PREFIX-php-apache"
+    build:
+      context: .
+      target: debug
+    expose:
+      - 80
+      - 443
+    volumes:
+      - type: bind
+        source: ./public/
+        target: /var/www/public
+      - type: bind
+        source: ./vendor/
+        target: /var/www/vendor
+      - type: bind
+        source: ./src/
+        target: /var/www/src
+      - type: bind
+        source: ./composer.json
+        target: /var/www/composer.json
+      - type: bind
+        source: ./composer.lock
+        target: /var/www/composer.lock
+      - type: bind
+        source: ./config/php/zzz-10-custom.ini
+        target: /usr/local/etc/php/conf.d/zzz-10-custom.ini
+      - type: bind
+        source: ./config/php/zzz-99-local.ini
+        target: /usr/local/etc/php/conf.d/zzz-99-local.ini
+        bind:
+          create_host_path: false
+      - type: bind
+        source: ./config/httpd/000-default.conf
+        target: /etc/apache2/sites-available/000-default.conf
+      - type: volume
+        source: web_temp_storage
+        target: /tmp
+      - type: volume
+        source: web_uploads_storage
+        target: /var/uploads
+    environment:
+      XDEBUG_CONFIG: client_host=host.docker.internal
+    env_file:
+      - .development.env
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.$DOCKER_PREFIX-http.rule=Host(`$WWW_DOMAIN`)"
+      - "traefik.http.routers.$DOCKER_PREFIX-http.entrypoints=web"
+      - "traefik.http.routers.$DOCKER_PREFIX-http.middlewares=$DOCKER_PREFIX-https"
+      - "traefik.http.middlewares.$DOCKER_PREFIX-https.redirectscheme.scheme=https"
+      - "traefik.http.routers.$DOCKER_PREFIX.rule=Host(`$WWW_DOMAIN`)"
+      - "traefik.http.routers.$DOCKER_PREFIX.entrypoints=websecure"
+      - "traefik.http.routers.$DOCKER_PREFIX.tls=true"
+      - "traefik.http.services.$DOCKER_PREFIX-httpd.loadbalancer.server.port=80"
+      - "traefik.http.services.$DOCKER_PREFIX-httpd.loadbalancer.passhostheader=true"
+  database:
+    container_name: "$DOCKER_PREFIX-mariadb"
+    image: mariadb:latest
+    expose:
+      - 3306
+    ports:
+      - "43306:3306"
+    volumes:
+      - db_storage:/var/lib/mysql
+    env_file:
+      - .init.env
+      - .development.env
+networks:
+  default:
+    name: localdev-network
+    external: true
+volumes:
+  db_storage:
+    name: "$DOCKER_PREFIX-mariadb-volume"
+  web_temp_storage:
+    name: "$DOCKER_PREFIX-web-temp-volume"
+  web_uploads_storage:
+    name: "$DOCKER_PREFIX-web-uploads-volume"

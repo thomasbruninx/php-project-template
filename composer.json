@@ -1,0 +1,15 @@
+{
+  "name": "thomasbruninx/php-project-template",
+  "description": "A batteries included dockerized PHP project template",
+  "minimum-stability": "stable",
+  "license": "proprietary",
+  "authors": [
+    {
+      "name": "thomasbruninx",
+      "email": "thomas.bruninx@icloud.com"
+    }
+  ],
+  "require": {
+    "ext-mysqli": "*"
+  }
+}
