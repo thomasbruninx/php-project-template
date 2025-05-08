@@ -25,6 +25,9 @@ services:
       - "traefik.http.services.$DOCKER_PREFIX-httpd.loadbalancer.passhostheader=true"
     networks:
       - default
+      - management
+    depends_on:
+      - database
     links:
       - database
   database:
@@ -32,8 +35,6 @@ services:
     image: mariadb:latest
     expose:
       - 3306
-    ports:
-      - "43306:3306"
     volumes:
       - db_storage:/var/lib/mysql
     env_file:
