@@ -2,3 +2,5 @@ vendor/
 .idea/
 *.env
 .DS_store
+
+docker-compose.hosting.yml

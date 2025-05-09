@@ -73,10 +73,44 @@ All source code and configuration files are accessible for the container through
 
 2. (Optional) Create an .init.env to initialize the MariaDB instance
 
-3. Launch hosting stack:
+3. Create a docker-compose.hosting.yml with the necessary networking and proxy configuration like this example:
    ```
-   docker compose --env-file .production.env -f docker-compose.production.yml up -d
+   services:
+     app:
+       restart: 'unless-stopped'
+       networks:
+         - default
+         - management
+       labels:
+         - "traefik.enable=true"
+         - "traefik.enable=true"
+         - "traefik.http.routers.$DOCKER_PREFIX-http.rule=Host(`$WWW_DOMAIN`)"
+         - "traefik.http.routers.$DOCKER_PREFIX-http.entrypoints=web"
+         - "traefik.http.routers.$DOCKER_PREFIX-http.middlewares=$DOCKER_PREFIX-https"
+         - "traefik.http.middlewares.$DOCKER_PREFIX-https.redirectscheme.scheme=https"
+         - "traefik.http.routers.$DOCKER_PREFIX.rule=Host(`$WWW_DOMAIN`)"
+         - "traefik.http.routers.$DOCKER_PREFIX.entrypoints=websecure"
+         - "traefik.http.routers.$DOCKER_PREFIX.tls.certresolver=letsencrypt"
+         - "traefik.http.services.$DOCKER_PREFIX-app.loadbalancer.server.port=8080"
+         - "traefik.http.services.$DOCKER_PREFIX-app.loadbalancer.passhostheader=true"    
+     database:
+       restart: 'unless-stopped'
+       networks:
+         - management
+   networks:
+     default:
+       name: proxy-network
+       external: true
+     management:
+       name: mgmt-network
+       external: true
    ```
+
+4. Launch hosting stack:
+   ```
+   docker compose --env-file .production.env -f docker-compose.production.yml -f docker-compose.hosting.yml up -d
+   ```
+
 The source code, dependencies and configuration files are baked into the Docker image. The SQL database and httpd's /tmp and /var/uploads folders are mounted as Docker volumes.
 
 ## General recommendations

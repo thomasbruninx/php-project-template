@@ -12,20 +12,6 @@ services:
       - web_uploads_storage:/var/uploads
     env_file:
       - .production.env
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.$DOCKER_PREFIX-http.rule=Host(`$WWW_DOMAIN`)"
-      - "traefik.http.routers.$DOCKER_PREFIX-http.entrypoints=web"
-      - "traefik.http.routers.$DOCKER_PREFIX-http.middlewares=$DOCKER_PREFIX-https"
-      - "traefik.http.middlewares.$DOCKER_PREFIX-https.redirectscheme.scheme=https"
-      - "traefik.http.routers.$DOCKER_PREFIX.rule=Host(`$WWW_DOMAIN`)"
-      - "traefik.http.routers.$DOCKER_PREFIX.entrypoints=websecure"
-      - "traefik.http.routers.$DOCKER_PREFIX.tls=true"
-      - "traefik.http.services.$DOCKER_PREFIX-httpd.loadbalancer.server.port=80"
-      - "traefik.http.services.$DOCKER_PREFIX-httpd.loadbalancer.passhostheader=true"
-    networks:
-      - default
-      - management
     depends_on:
       - database
     links:
@@ -40,15 +26,6 @@ services:
     env_file:
       - .init.env
       - .production.env
-    networks:
-      - management
-networks:
-  default:
-    name: proxy-network
-    external: true
-  management:
-    name: mgmt-network
-    external: true
 volumes:
   db_storage:
     name: "$DOCKER_PREFIX-mariadb-volume"
